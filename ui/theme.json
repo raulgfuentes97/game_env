@@ -1,0 +1,30 @@
+{
+  "#panel": {
+    "normal_bg": "#F0F0F0",
+    "hovered_bg": "#F0F0F0",
+    "selected_bg": "#F0F0F0"
+  },
+  "button": {
+    "normal_bg": "#64C864",
+    "hovered_bg": "#78DC78",
+    "selected_bg": "#50B450",
+    "normal_text": "#000000",
+    "hovered_text": "#000000",
+    "selected_text": "#000000"
+  },
+  "#boton_play": {
+    "normal_bg": "#64C864",
+    "hovered_bg": "#78DC78",
+    "selected_bg": "#50B450"
+  },
+  "#boton_prev": {
+    "normal_bg": "#B4B4B4",
+    "hovered_bg": "#C8C8C8",
+    "selected_bg": "#969696"
+  },
+  "#boton_next": {
+    "normal_bg": "#B4B4B4",
+    "hovered_bg": "#C8C8C8",
+    "selected_bg": "#969696"
+  }
+}

@@ -1,0 +1,17 @@
+{
+    "players": [
+        {
+            "name": "RandomBot",
+            "path": "agents/random_agent.py",
+            "params": {}
+        },
+        {
+            "name": "Yo",
+            "path": "agents/tic_tac_toe_agent.py",
+            "params": {
+                "write_logs": false
+            }
+        }
+    ],
+    "rounds": 2000
+}

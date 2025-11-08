@@ -1,0 +1,19 @@
+{
+    "players": [
+        {
+            "name": "AI",
+            "path": "agents/dqn_agent.py",
+            "params": {
+                "model_path": "models/best_model_vs_MyTicTacToeAgent.pth"
+            }
+        },
+        {
+            "name": "Yo",
+            "path": "agents/tic_tac_toe_agent.py",
+            "params": {
+                "write_logs": false
+            }
+        }
+    ],
+    "rounds": 2000
+}
