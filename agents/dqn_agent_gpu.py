@@ -6,39 +6,41 @@ import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 from core.base_agent import BaseAgent
 
-
-class DQNAgent(BaseAgent):
+class DQNAgentGPU(BaseAgent):
 
     def __init__(self, name, lr=0.001, gamma=0.95, epsilon=1.0,
-                epsilon_min=0.05, epsilon_decay=0.9995, model_path=None):
+                 epsilon_min=0.05, epsilon_decay=0.9995, model_path=None):
         super().__init__(name)
+
+        if torch.backends.mps.is_available():
+            self.device = torch.device("mps")
+        elif torch.cuda.is_available():
+            self.device = torch.device("cuda")
+        else:
+            self.device = torch.device("cpu")
+        print(f"[INFO] Using device: {self.device}")
 
         self.gamma = gamma
         self.epsilon = epsilon
         self.epsilon_min = epsilon_min
         self.epsilon_decay = epsilon_decay
 
-        # Red neuronal principal
+        # Red neuronal
         self.model = nn.Sequential(
-            nn.Linear(9, 128),
+            nn.Linear(9, 64),
             nn.ReLU(),
-            nn.Linear(128, 128),
-            nn.ReLU(),
-            nn.Linear(128, 64),
+            nn.Linear(64, 64),
             nn.ReLU(),
             nn.Linear(64, 9)
-        )
+        ).to(self.device)
 
-        # Target network
         self.target_model = nn.Sequential(
-            nn.Linear(9, 128),
+            nn.Linear(9, 64),
             nn.ReLU(),
-            nn.Linear(128, 128),
-            nn.ReLU(),
-            nn.Linear(128, 64),
+            nn.Linear(64, 64),
             nn.ReLU(),
             nn.Linear(64, 9)
-        )
+        ).to(self.device)
 
         self.target_model.load_state_dict(self.model.state_dict())
         self.target_model.eval()
@@ -47,32 +49,29 @@ class DQNAgent(BaseAgent):
         self.loss_fn = nn.MSELoss()
 
         self.memory = []
-        self.batch_size = 128
-        self.max_memory = 75000
+        self.batch_size = 64
+        self.max_memory = 50000
         self.update_target_steps = 500
         self.last_state = None
         self.train_step = 0
 
+        # Cargar modelo si existe
         if model_path and os.path.exists(model_path):
-            self.model.load_state_dict(torch.load(model_path, map_location=torch.device("cpu")))
+            self.model.load_state_dict(torch.load(model_path, map_location=self.device))
             self.target_model.load_state_dict(self.model.state_dict())
             self.epsilon = 0.0  # inferencia pura
 
-    # ------------------------------------------------------------------
-    # Métodos del agente
-    # ------------------------------------------------------------------
-
+    # ------------------------ Métodos ------------------------
     def act(self, state, valid_actions):
-        board = torch.tensor(state["board"].reshape(-1), dtype=torch.float32)
+        board = torch.tensor(state["board"].reshape(-1), dtype=torch.float32, device=self.device)
 
         if random.random() < self.epsilon:
             return random.choice(valid_actions)
 
         with torch.no_grad():
-            q_values = self.model(board).cpu()
+            q_values = self.model(board)
 
         return max(valid_actions, key=lambda a: q_values[a[0] * 3 + a[1]].item())
-
 
     def observe(self, next_state, reward, done, player_idx):
         if self.last_state is None:
@@ -85,14 +84,11 @@ class DQNAgent(BaseAgent):
         if len(self.memory) > self.max_memory:
             self.memory.pop(0)
 
-
     def set_last(self, state, action):
         self.last_state = state
         self.last_action = action
 
-    # ------------------------------------------------------------------
-    # Double DQN + Target Network
-    # ------------------------------------------------------------------
+    # ------------------------ Double DQN + Target Network ------------------------
     def train_from_memory(self):
         if len(self.memory) < self.batch_size:
             return
@@ -103,8 +99,8 @@ class DQNAgent(BaseAgent):
         targets = []
 
         for state, action, reward, next_state, done in batch:
-            board = torch.tensor(state["board"].reshape(-1), dtype=torch.float32)
-            next_board = torch.tensor(next_state["board"].reshape(-1), dtype=torch.float32)
+            board = torch.tensor(state["board"].reshape(-1), dtype=torch.float32, device=self.device)
+            next_board = torch.tensor(next_state["board"].reshape(-1), dtype=torch.float32, device=self.device)
 
             target = self.model(board).detach()
             action_index = action[0] * 3 + action[1]
@@ -112,7 +108,6 @@ class DQNAgent(BaseAgent):
             if done:
                 target[action_index] = reward
             else:
-                # DOUBLE DQN (target más estable)
                 best_next_action = torch.argmax(self.model(next_board)).item()
                 target[action_index] = reward + self.gamma * self.target_model(next_board)[best_next_action].item()
 
@@ -138,7 +133,6 @@ class DQNAgent(BaseAgent):
 
     def update_target_network(self):
         self.target_model.load_state_dict(self.model.state_dict())
-
 
     def save(self, path="model.pth"):
         torch.save(self.model.state_dict(), path)
