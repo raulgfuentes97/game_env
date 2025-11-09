@@ -27,17 +27,21 @@ class DQNAgentGPU(BaseAgent):
 
         # Red neuronal
         self.model = nn.Sequential(
-            nn.Linear(9, 64),
+            nn.Linear(9, 128),
             nn.ReLU(),
-            nn.Linear(64, 64),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, 64),
             nn.ReLU(),
             nn.Linear(64, 9)
         ).to(self.device)
 
         self.target_model = nn.Sequential(
-            nn.Linear(9, 64),
+            nn.Linear(9, 128),
             nn.ReLU(),
-            nn.Linear(64, 64),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, 64),
             nn.ReLU(),
             nn.Linear(64, 9)
         ).to(self.device)
@@ -49,8 +53,8 @@ class DQNAgentGPU(BaseAgent):
         self.loss_fn = nn.MSELoss()
 
         self.memory = []
-        self.batch_size = 64
-        self.max_memory = 50000
+        self.batch_size = 128
+        self.max_memory = 75000
         self.update_target_steps = 500
         self.last_state = None
         self.train_step = 0
