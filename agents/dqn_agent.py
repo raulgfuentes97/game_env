@@ -86,7 +86,7 @@ class DQNAgent(BaseAgent):
         self.last_action = action
 
     # ------------------------------------------------------------------
-    # ✅ Double DQN + Target Network
+    # Double DQN + Target Network
     # ------------------------------------------------------------------
     def train_from_memory(self):
         if len(self.memory) < self.batch_size:

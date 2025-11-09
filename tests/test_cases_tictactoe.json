@@ -1,0 +1,50 @@
+[
+  {
+    "name": "winning_move",
+    "state": {
+      "board": [
+        [-1, 0, -1],
+        [1, 0, 1],
+        [0, -1, 0]
+      ]
+    },
+    "valid_actions": [[0,1], [1,1], [2,0], [2,2]],
+    "expected_actions": [[1,1]]
+  },
+  {
+    "name": "block_opponent",
+    "state": {
+      "board": [
+        [-1, -1, 0],
+        [0, 1, 0],
+        [0, 0, 1]
+      ]
+    },
+    "valid_actions": [[0,2], [1,0], [1,2], [2,0]],
+    "expected_actions": [[0,2]]
+  },
+  {
+    "name": "multiple_good_options",
+    "state": {
+      "board": [
+        [1, -1, 0],
+        [1, 1, -1],
+        [0, -1, 0]
+      ]
+    },
+    "valid_actions": [[0,2], [2,0], [2,2]],
+    "expected_actions": [[2,0], [2,2]]
+  },
+  {
+    "name": "random_case",
+    "state": {
+      "board": [
+        [1, -1, 1],
+        [-1, 1, -1],
+        [0, 0, 0]
+      ]
+    },
+    "valid_actions": [[2,0], [2,1], [2,2]],
+    "expected_actions": [[2,0], [2,1], [2,2]]
+  }
+]

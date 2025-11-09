@@ -1,0 +1,16 @@
+---> I PREVENT YOU FROM WINNING!
+board: [[-1, 0, -1], [1, 0, 1], [0, -1, 0]]
+action: (0, 1)
+---> I PREVENT YOU FROM WINNING!
+board: [[-1, 0, -1], [1, 0, 1], [0, -1, 0]]
+action: (1, 1)
+---> I WIN!
+board: [[-1, -1, 0], [0, 1, 0], [0, 0, 1]]
+action: (0, 2)
+---> I PREVENT YOU FROM WINNING!
+board: [[1, -1, 0], [1, 1, -1], [0, -1, 0]]
+action: (2, 0)
+---> I WIN!
+board: [[1, -1, 1], [-1, 1, -1], [0, 0, 0]]
+action: (2, 0)
+---> I WIN!

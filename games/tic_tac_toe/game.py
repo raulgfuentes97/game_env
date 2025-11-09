@@ -38,33 +38,115 @@ class TicTacToeGame(BaseGame):
     def get_current_players(self):
         """Devuelve qué jugadores deben actuar en este turno."""
         return [] if self.done else [self.current_player]
+    
+    def evaluate_move(self, player_index, action):
+        """
+        Reward intermedio:
+        +0.3 si esta jugada crea 2 o más líneas con 2 fichas propias
+        +0.2 si esta jugada crea línea con 2 fichas propias (casi gana)
+        +0.2 si bloquea línea del oponente con 2 fichas
+        +0.02 por fila, columna y/o diagonal vacía desde la que se coloca la ficha
+        """
+        i, j = action
+        reward = 0.0
+
+        my_mark = player_index + 1               # 1 o 2
+        opp_mark = 2 if my_mark == 1 else 1
+
+        # -------------------------
+        # 1) Detectar casi-victoria propia y bloqueo al rival
+        # -------------------------
+        my_two_in_line = 0
+        block_two_line = 0
+
+        # FILA
+        row = self.board[i, :]
+        if list(row).count(my_mark) == 2 and list(row).count(0) == 1:
+            my_two_in_line += 1
+        if list(row).count(opp_mark) == 2 and list(row).count(0) == 1:
+            block_two_line += 1
+
+        # COLUMNA
+        col = self.board[:, j]
+        if list(col).count(my_mark) == 2 and list(col).count(0) == 1:
+            my_two_in_line += 1
+        if list(col).count(opp_mark) == 2 and list(col).count(0) == 1:
+            block_two_line += 1
+
+        # DIAGONAL PRINCIPAL
+        if i == j:
+            diag = [self.board[x, x] for x in range(3)]
+            if diag.count(my_mark) == 2 and diag.count(0) == 1:
+                my_two_in_line += 1
+            if diag.count(opp_mark) == 2 and diag.count(0) == 1:
+                block_two_line += 1
+
+        # DIAGONAL SECUNDARIA
+        if i + j == 2:
+            diag = [self.board[x, 2 - x] for x in range(3)]
+            if diag.count(my_mark) == 2 and diag.count(0) == 1:
+                my_two_in_line += 1
+            if diag.count(opp_mark) == 2 and diag.count(0) == 1:
+                block_two_line += 1
+
+        # Aplicar reglas del reward shaping
+        if my_two_in_line >= 2:
+            reward += 0.3                     # crea dos amenazas simultáneas → brutal
+        elif my_two_in_line == 1:
+            reward += 0.2                     # casi gana
+
+        if block_two_line >= 1:
+            reward += 0.2                     # bloquea jugada del rival
+
+        # -------------------------
+        # 2) Bonus por posiciones "útiles"
+        #    (fila / columna / diagonal totalmente abiertas)
+        # -------------------------
+        emptiness_bonus = 0
+
+        if all(self.board[i, x] == 0 for x in range(3)):
+            emptiness_bonus += 1
+        if all(self.board[x, j] == 0 for x in range(3)):
+            emptiness_bonus += 1
+        if i == j and all(self.board[x, x] == 0 for x in range(3)):
+            emptiness_bonus += 1
+        if i + j == 2 and all(self.board[x, 2 - x] == 0 for x in range(3)):
+            emptiness_bonus += 1
+
+        reward += emptiness_bonus * 0.02
+
+        return reward
+
+
 
     def step(self, player_actions):
-        """
-        player_actions: lista de (player_index, action)
-        """
+        rewards = [0.0] * self.num_players
+
         for player_index, action in player_actions:
             i, j = action
-            if self.board[i, j] != 0:
-                raise ValueError("Invalid move")
-
-            # player_index + 1 => visible en tablero como (1,2,...)
             self.board[i, j] = player_index + 1
             self.history.append((player_index, action))
 
+        # Check terminal
         self.done = self.is_terminal()
 
-        # Recompensas
-        reward = [0] * self.num_players
-        if self.done:
-            winner = self.get_winner()
-            if winner is not None:
-                reward[winner] = 1
+        # Reward shaping
+        for player_index, action in player_actions:
+            if self.done:
+                winner = self.get_winner()
+                if winner == player_index:
+                    rewards[player_index] += 3.0
+                elif winner is None:
+                    rewards[player_index] = 0.0  # empate
+                else:
+                    rewards[player_index] -= 3.0
+            else:
+                # Recompensa intermedia
+                rewards[player_index] += self.evaluate_move(player_index, action)
 
         # Siguiente jugador
         self.current_player = (self.current_player + 1) % self.num_players
-
-        return self.get_state(), reward, self.done
+        return self.get_state(), rewards, self.done
 
     def is_terminal(self):
         board = self.board

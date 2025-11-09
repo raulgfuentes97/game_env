@@ -10,28 +10,37 @@ class MyTicTacToeAgent(BaseAgent):
     def act(self, state, valid_actions):
         board = state["board"]
         board_size = len(board[0])
-        minimax = dict()
+
         with open("logfile.log", "a") as f:
+
             for action in valid_actions:
                 i, j = action
                 # cells where I can win (check row, column & diagonals)
-                if (sum([board[i][x] for x in range(board_size)]) == (board_size - 1)) or \
-                    (sum([board[x][j] for x in range(board_size)]) == (board_size - 1)) or \
+                if (sum(board[i, :]) == (board_size - 1)) or \
+                    (sum(board[:, j]) == (board_size - 1)) or \
                     ((i == j and sum([board[x][x] for x in range(board_size)]) == (board_size - 1))) or \
                     (i == (board_size - j - 1) and sum([board[x][board_size - x - 1] for x in range(board_size)]) == (board_size - 1)):
                     if self.write_logs:
+                        f.write(f"board: {board}\n")
+                        f.write(f"action: {action}\n")
                         f.write("---> I WIN!\n")
                     return action
 
+            for action in valid_actions:
+                i, j = action
                 # cells where opponent can win (check row, column & diagonals)
-                if (sum([board[i][x] for x in range(board_size)]) == -(board_size - 1)) or \
-                    (sum([board[x][j] for x in range(board_size)]) == -(board_size - 1)) or \
+                if (sum(board[i, :]) == -(board_size - 1)) or \
+                    (sum(board[:, j]) == -(board_size - 1)) or \
                     (i == j and sum([board[x][x] for x in range(board_size)]) == -(board_size - 1)) or \
                     (i == (board_size - j - 1) and sum([board[x][board_size - x - 1] for x in range(board_size)]) == -(board_size - 1)):
                     if self.write_logs:
+                        f.write(f"board: {board}\n")
+                        f.write(f"action: {action}\n")
                         f.write("---> I PREVENT YOU FROM WINNING!\n")
                     return action
 
+            for action in valid_actions:
+                i, j = action
                 # check minimax value of action
                 # +1 point for every enemy cell
                 # +1 point for every player cell
