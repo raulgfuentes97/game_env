@@ -111,8 +111,8 @@ for episode in tqdm(range(1, EPISODES + 1)):
     # --- Evaluación periódica ---
     if episode % EVAL_INTERVAL == 0:
         if VERBOSE:
-            winrate = evaluate_against_fixed(agent1, MyTicTacToeAgent, TicTacToeGame, episodes=EVAL_EPISODES)
-        writer.add_scalar("winrate_vs_fixed", winrate, episode)
+            writer.add_scalar("winrate_vs_fixed", winrate, episode)
+        winrate = evaluate_against_fixed(agent1, MyTicTacToeAgent, TicTacToeGame, episodes=EVAL_EPISODES)
         print(f"[EVAL] Ep {episode} → winrate vs {MyTicTacToeAgent.__name__}: {winrate:.2f} | ε={agent1.epsilon:.3f}")
 
         # Guardar modelo si mejora
