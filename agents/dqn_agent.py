@@ -20,24 +20,16 @@ class DQNAgent(BaseAgent):
 
         # Red neuronal principal
         self.model = nn.Sequential(
-            nn.Linear(9, 128),
+            nn.Linear(9, 32),
             nn.ReLU(),
-            nn.Linear(128, 128),
-            nn.ReLU(),
-            nn.Linear(128, 64),
-            nn.ReLU(),
-            nn.Linear(64, 9)
+            nn.Linear(32, 9)
         )
 
         # Target network
         self.target_model = nn.Sequential(
-            nn.Linear(9, 128),
+            nn.Linear(9, 32),
             nn.ReLU(),
-            nn.Linear(128, 128),
-            nn.ReLU(),
-            nn.Linear(128, 64),
-            nn.ReLU(),
-            nn.Linear(64, 9)
+            nn.Linear(32, 9)
         )
 
         self.target_model.load_state_dict(self.model.state_dict())

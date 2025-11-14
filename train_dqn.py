@@ -11,6 +11,7 @@ import os
 EPISODES = 30000
 EVAL_INTERVAL = 500
 EVAL_EPISODES = 50
+VERBOSE = False
 
 # --- Inicialización agentes (self-play) ---
 agent1 = DQNAgent("DQN-1")
@@ -18,7 +19,8 @@ agent2 = DQNAgent("DQN-2")
 agents = [agent1, agent2]
 
 # --- Writer TensorBoard ---
-writer = SummaryWriter()
+if VERBOSE:
+    writer = SummaryWriter()
 best_winrate = 0.0
 
 # --- Inicialización juego (se crearán nuevos objetos por partida) ---
@@ -53,11 +55,11 @@ def evaluate_against_fixed(agent, opponent_class, game_class, episodes=50):
 
         # rewards es lista de recompensas por jugador; si rewards[0] == 1, agent ganó
         if isinstance(rewards, list):
-            if rewards[0] == 1:
+            if rewards[0] >= 3:
                 wins += 1
         else:
             # Si por algún motivo reward viene como escalar (versiones antiguas), asumimos index 0
-            if rewards == 1:
+            if rewards >= 3:
                 wins += 1
 
     agent.epsilon = prev_epsilon
@@ -99,15 +101,17 @@ for episode in tqdm(range(1, EPISODES + 1)):
     for a in agents:
         a.epsilon = max(a.epsilon_min, a.epsilon * a.epsilon_decay)
         # Log epsilon individual
-        writer.add_scalar(f"epsilon/{a.name}", a.epsilon, episode)
+        if VERBOSE:
+            writer.add_scalar(f"epsilon/{a.name}", a.epsilon, episode)
 
     # Log de pérdida promedio por episodio
-    if losses:
+    if losses and VERBOSE:
         writer.add_scalar("loss", np.mean(losses), episode)
 
     # --- Evaluación periódica ---
     if episode % EVAL_INTERVAL == 0:
-        winrate = evaluate_against_fixed(agent1, MyTicTacToeAgent, TicTacToeGame, episodes=EVAL_EPISODES)
+        if VERBOSE:
+            winrate = evaluate_against_fixed(agent1, MyTicTacToeAgent, TicTacToeGame, episodes=EVAL_EPISODES)
         writer.add_scalar("winrate_vs_fixed", winrate, episode)
         print(f"[EVAL] Ep {episode} → winrate vs {MyTicTacToeAgent.__name__}: {winrate:.2f} | ε={agent1.epsilon:.3f}")
 
@@ -120,4 +124,5 @@ for episode in tqdm(range(1, EPISODES + 1)):
             print(f"💾 Nuevo MEJOR modelo guardado contra {MyTicTacToeAgent.__name__}! -> {save_path}")
 
 # Cerrar writer al final
-writer.close()
+if VERBOSE:
+    writer.close()
